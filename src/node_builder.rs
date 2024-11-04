@@ -75,7 +75,7 @@ impl PyNode {
         }
     }
 
-    pub fn __div__(&self, other: &Bound<PyAny>) -> PyResult<PyNode> {
+    pub fn __truediv__(&self, other: &Bound<PyAny>) -> PyResult<PyNode> {
         if let Ok(other) = other.extract::<PyNode>() {
             Ok(PyNode(self.0.clone() / other.0.clone()))
         } else if let Ok(other) = other.extract::<PyParam>() {
@@ -151,6 +151,10 @@ impl PyNode {
 
     pub fn recip(&self) -> PyNode {
         PyNode(self.0.recip())
+    }
+
+    pub fn smooth(&self) -> PyNode {
+        PyNode(self.0.smooth())
     }
 }
 

@@ -1,7 +1,11 @@
 use pyo3::prelude::*;
 use raug::prelude::*;
 
-use crate::{graph::PyGraph, node_builder::PyNode, runtime::PyRuntime};
+use crate::{
+    graph::PyGraph,
+    node_builder::{PyNode, PyParam},
+    runtime::PyRuntime,
+};
 
 #[pyclass(name = "GraphBuilder")]
 pub struct PyGraphBuilder(pub(crate) GraphBuilder);
@@ -55,5 +59,9 @@ impl PyGraphBuilder {
     ) -> PyResult<()> {
         self.0.connect(&src.0, src_output, &dst.0, dst_input);
         Ok(())
+    }
+
+    pub fn param(&self, node: &PyParam) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.param(&node.0)))
     }
 }

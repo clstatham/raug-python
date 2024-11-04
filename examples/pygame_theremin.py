@@ -1,5 +1,6 @@
 import pygame
 import raug
+import math
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -15,14 +16,20 @@ if __name__ == "__main__":
     out1 = graph.add_output()
     out2 = graph.add_output()
 
-    sine = graph.sine_osc()
-    freq = sine.input(0).param()
-    freq.set(440.0)
+    sr = graph.sample_rate()
+    pa = graph.phase_accum()
 
-    amp = raug.Param()
-    amp.set(0.2)
+    freq_param = raug.Param()
+    # freq_param.set(440.0)
 
-    sine = sine * amp
+    amp_param = raug.Param()
+    # amp_param.set(0.2)
+
+    freq = graph.param(freq_param).smooth()
+    amp = graph.param(amp_param).smooth()
+
+    pa.input(0).connect((freq / sr).output(0))
+    sine = (pa * 2.0 * math.pi).sin() * amp
 
     sine.output(0).connect(out1.input(0))
     sine.output(0).connect(out2.input(0))
@@ -36,8 +43,10 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEMOTION:
-                freq.set(440.0 + (event.pos[0] / SCREEN_WIDTH) * 880.0)
-                amp.set(0.2 - (event.pos[1] / SCREEN_HEIGHT) * 0.2)
+                freq_param.set(440.0 + (event.pos[0] / SCREEN_WIDTH) * 880.0)
+                amp_param.set(0.2 - (event.pos[1] / SCREEN_HEIGHT) * 0.2)
+            if event.type == pygame.WINDOWLEAVE:
+                amp_param.set(0.0)
 
         screen.fill((0, 0, 0))
         pygame.display.flip()

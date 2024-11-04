@@ -1,4 +1,5 @@
 import raug
+import time
 import math
 
 if __name__ == "__main__":
@@ -10,6 +11,7 @@ if __name__ == "__main__":
     sr = graph.sample_rate()
     pa = graph.phase_accum()
     pa.input(0).connect(sr.recip().output(0))
+    pa = pa % 1.0
 
     freq1 = raug.Param()
     freq1.set(440.0)
@@ -26,4 +28,16 @@ if __name__ == "__main__":
     final.output(0).connect(out2.input(0))
 
     runtime = graph.build_runtime()
-    runtime.run_for(1.0)
+    handle = runtime.run()
+
+    time.sleep(1.0)
+
+    freq2.set(330.0)
+
+    time.sleep(1.0)
+
+    freq1.set(880.0)
+
+    time.sleep(1.0)
+
+    handle.stop()

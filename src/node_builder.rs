@@ -103,6 +103,20 @@ impl PyNode {
         }
     }
 
+    pub fn __mod__(&self, other: &Bound<PyAny>) -> PyResult<PyNode> {
+        if let Ok(other) = other.extract::<PyNode>() {
+            Ok(PyNode(self.0.clone() % other.0.clone()))
+        } else if let Ok(other) = other.extract::<PyParam>() {
+            Ok(PyNode(self.0.clone() % other.0.clone()))
+        } else if let Ok(other) = other.extract::<f64>() {
+            Ok(PyNode(self.0.clone() % other))
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "unsupported operand type(s) for %: 'Node' and 'other'",
+            ))
+        }
+    }
+
     pub fn __neg__(&self) -> PyNode {
         PyNode(self.0.neg())
     }

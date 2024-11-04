@@ -30,6 +30,10 @@ impl PyGraphBuilder {
         Ok(PyNode(self.0.add_output()))
     }
 
+    pub fn sample_rate(&self) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.sample_rate()))
+    }
+
     pub fn phase_accum(&self) -> PyResult<PyNode> {
         Ok(PyNode(self.0.phase_accum()))
     }

@@ -202,6 +202,10 @@ impl PyOutput {
         self.0.connect(&node.borrow().0);
         Ok(())
     }
+
+    pub fn node(&self) -> PyNode {
+        PyNode(self.0.node())
+    }
 }
 
 #[derive(Clone)]

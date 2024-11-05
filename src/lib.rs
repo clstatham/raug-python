@@ -15,6 +15,7 @@ fn raug(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<node_builder::PyOutput>()?;
     m.add_class::<node_builder::PyParam>()?;
     m.add_class::<message::PyMessage>()?;
+    m.add_class::<message::PyBang>()?;
     m.add_class::<runtime::PyRuntime>()?;
     m.add_class::<runtime::PyRuntimeHandle>()?;
 

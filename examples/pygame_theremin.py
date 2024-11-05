@@ -17,19 +17,20 @@ if __name__ == "__main__":
     out2 = graph.add_output()
 
     sr = graph.sample_rate()
-    pa = graph.phase_accum()
+    phase = graph.phase_accum()
 
     freq_param = raug.Param()
-    # freq_param.set(440.0)
+    freq_param.set(440.0)
 
     amp_param = raug.Param()
-    # amp_param.set(0.2)
+    amp_param.set(0.2)
 
     freq = graph.param(freq_param).smooth()
     amp = graph.param(amp_param).smooth()
 
-    pa.input(0).connect((freq / sr).output(0))
-    sine = (pa * 2.0 * math.pi).sin() * amp
+    increment = freq / sr
+    phase.input("increment").connect(increment.output(0))
+    sine = (phase * 2.0 * math.pi).sin() * amp
 
     sine.output(0).connect(out1.input(0))
     sine.output(0).connect(out2.input(0))

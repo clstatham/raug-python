@@ -50,6 +50,10 @@ impl PyGraphBuilder {
         Ok(PyNode(self.0.saw_osc()))
     }
 
+    pub fn metro(&self) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.metro()))
+    }
+
     pub fn connect(
         &self,
         src: &PyNode,

@@ -51,6 +51,9 @@ if __name__ == "__main__":
     amp_param = raug.Param()
     amp_param.set(0.2)
 
+    decay = raug.Param()
+    decay.set(0.05)
+
     freq = graph.param(freq_param).smooth()
     amp = graph.param(amp_param).smooth()
 
@@ -62,12 +65,14 @@ if __name__ == "__main__":
 
     increment = freq / sr
     phase.input("increment").connect(increment.output(0))
-    sine = (phase * 2.0 * math.pi).sin() * amp
+    sine = (phase * 2.0 * math.pi).sin()
+
+    amp = decay_env(graph, trig.output(0), graph.param(decay)) * amp
+
+    sine = sine * amp
 
     sine.output(0).connect(out1.input(0))
     sine.output(0).connect(out2.input(0))
-
-    graph.write_dot("sequencer.dot")
 
     runtime = graph.build_runtime()
     handle = runtime.run()

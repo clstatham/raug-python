@@ -48,4 +48,8 @@ impl PyBang {
     pub fn new() -> Self {
         PyBang
     }
+
+    pub fn __repr__(&self) -> String {
+        "Bang".to_string()
+    }
 }

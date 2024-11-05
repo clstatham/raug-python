@@ -31,8 +31,18 @@ impl PyRuntime {
         Ok(())
     }
 
+    pub fn param_names(&self) -> Vec<String> {
+        let mut names: Vec<_> = self
+            .0
+            .param_iter()
+            .map(|(name, _)| name.to_string())
+            .collect();
+        names.sort();
+        names
+    }
+
     pub fn param_named(&self, name: &str) -> PyResult<PyParam> {
-        Ok(PyParam(self.0.param_named(name).unwrap()))
+        Ok(PyParam(self.0.param_named(name).unwrap().clone()))
     }
 }
 

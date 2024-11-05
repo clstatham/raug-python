@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use raug::prelude::*;
 
-use crate::message::PyMessage;
+use crate::message::PyBang;
 
 #[derive(Clone)]
 #[pyclass(name = "Node")]
@@ -237,11 +237,20 @@ impl PyParam {
         }
     }
 
-    pub fn get(&mut self) -> PyResult<Option<PyMessage>> {
+    pub fn get(&mut self, py: Python) -> PyResult<PyObject> {
         let message = self.0.get();
-        match message {
-            Some(message) => Ok(Some(PyMessage::try_from(message)?)),
-            None => Ok(None),
+        if let Some(message) = message {
+            match message {
+                Message::Bang => Ok(PyBang.into_py(py)),
+                Message::Int(int) => Ok(int.into_py(py)),
+                Message::Float(float) => Ok(float.into_py(py)),
+                Message::String(string) => Ok(string.into_py(py)),
+                _ => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                    "unsupported message type",
+                )),
+            }
+        } else {
+            Ok(py.None())
         }
     }
 }

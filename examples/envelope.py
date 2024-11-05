@@ -1,5 +1,6 @@
 import raug
 import math
+from example_utils import repl
 
 
 def decay_env(graph: raug.GraphBuilder, trig: raug.Node, decay: raug.Node) -> raug.Node:
@@ -64,19 +65,6 @@ if __name__ == "__main__":
 
     inp = ""
 
-    print("press q to quit")
-    while inp != "q":
-        inp = input("> ").strip()
-
-        if inp.startswith("decay1"):
-            decay1.set(float(inp.split()[1]))
-        elif inp.startswith("decay2"):
-            decay2.set(float(inp.split()[1]))
-        elif inp.startswith("freq1"):
-            freq1.set(float(inp.split()[1]))
-        elif inp.startswith("freq2"):
-            freq2.set(float(inp.split()[1]))
-        elif inp.startswith("rate"):
-            rate.set(float(inp.split()[1]))
+    repl(runtime)
 
     handle.stop()

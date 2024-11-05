@@ -2,18 +2,8 @@ import raug
 import time
 import math
 from typing import List, Tuple
-
-
-def decay_env(graph: raug.GraphBuilder, trig: raug.Output, decay: raug.Node) -> raug.Node:
-    sr = graph.sample_rate()
-    time = graph.phase_accum()
-    time.input(0).connect(sr.recip().output(0))
-    time.input(1).connect(trig)
-
-    env = (-time + 1.0) ** decay.recip()
-    env = env.smooth()
-
-    return env
+from example_utils import repl
+from envelope import decay_env
 
 
 def sequencer(graph: raug.GraphBuilder, trig: raug.Output, values: List[raug.Node]) -> Tuple[raug.Node, ...]:
@@ -74,7 +64,7 @@ if __name__ == "__main__":
     phase.input("increment").connect(increment.output(0))
     sine = (phase * 2.0 * math.pi).sin()
 
-    amp = decay_env(graph, trig.output(0), graph.param(decay)) * amp
+    amp = decay_env(graph, trig, graph.param(decay)) * amp
 
     sine = sine * amp
 
@@ -84,21 +74,6 @@ if __name__ == "__main__":
     runtime = graph.build_runtime()
     handle = runtime.run()
 
-    print("press q to quit")
-    while True:
-        inp = input("> ").strip()
-        if inp == "q":
-            break
-        if inp.startswith("freq"):
-            _, index, value = inp.split()
-            index = index.strip()
-            value = value.strip()
-            runtime.param_named(f"freq{index}").set(float(value))
-        if inp.startswith("amp"):
-            amp_param.set(float(inp.split()[1].strip()))
-        if inp.startswith("decay"):
-            decay.set(float(inp.split()[1].strip()))
-        if inp.startswith("rate"):
-            rate.set(float(inp.split()[1].strip()))
+    repl(runtime)
 
     handle.stop()

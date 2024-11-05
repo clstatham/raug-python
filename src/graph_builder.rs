@@ -122,6 +122,14 @@ impl PyGraphBuilder {
         Ok(PyNode(self.0.counter()))
     }
 
+    pub fn noise_osc(&self) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.noise_osc()))
+    }
+
+    pub fn sample_and_hold(&self) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.sample_and_hold()))
+    }
+
     pub fn connect(
         &self,
         src: &PyNode,

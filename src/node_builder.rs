@@ -156,6 +156,26 @@ impl PyNode {
     pub fn smooth(&self) -> PyNode {
         PyNode(self.0.smooth())
     }
+
+    pub fn midi2freq(&self) -> PyNode {
+        PyNode(self.0.midi2freq())
+    }
+
+    pub fn freq2midi(&self) -> PyNode {
+        PyNode(self.0.freq2midi())
+    }
+
+    pub fn floor(&self) -> PyNode {
+        PyNode(self.0.floor())
+    }
+
+    pub fn ceil(&self) -> PyNode {
+        PyNode(self.0.ceil())
+    }
+
+    pub fn round(&self) -> PyNode {
+        PyNode(self.0.round())
+    }
 }
 
 #[pyclass(name = "Input")]

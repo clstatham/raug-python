@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use raug::prelude::*;
 
-use crate::graph::PyGraph;
+use crate::{graph::PyGraph, node_builder::PyParam};
 
 #[pyclass(name = "Runtime")]
 pub struct PyRuntime(pub(crate) Runtime);
@@ -29,6 +29,10 @@ impl PyRuntime {
             )
             .unwrap();
         Ok(())
+    }
+
+    pub fn param_named(&self, name: &str) -> PyResult<PyParam> {
+        Ok(PyParam(self.0.param_named(name).unwrap()))
     }
 }
 

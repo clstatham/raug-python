@@ -19,10 +19,10 @@ if __name__ == "__main__":
     sr = graph.sample_rate()
     phase = graph.phase_accum()
 
-    freq_param = raug.Param()
+    freq_param = raug.Param("freq")
     freq_param.set(440.0)
 
-    amp_param = raug.Param()
+    amp_param = raug.Param("amp")
     amp_param.set(0.2)
 
     freq = graph.param(freq_param).smooth()

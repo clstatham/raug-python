@@ -1,7 +1,7 @@
 import raug
 import time
 import math
-from typing import List
+from typing import List, Tuple
 
 
 def decay_env(graph: raug.GraphBuilder, trig: raug.Output, decay: raug.Node) -> raug.Node:
@@ -16,7 +16,7 @@ def decay_env(graph: raug.GraphBuilder, trig: raug.Output, decay: raug.Node) -> 
     return env
 
 
-def sequencer(graph: raug.GraphBuilder, trig: raug.Output, values: List[float]) -> raug.Node:
+def sequencer(graph: raug.GraphBuilder, trig: raug.Output, values: List[raug.Node]) -> Tuple[raug.Node, ...]:
     counter = graph.counter()
     trig.connect(counter.input(0))
     counter = (counter - 1) % len(values)
@@ -27,13 +27,17 @@ def sequencer(graph: raug.GraphBuilder, trig: raug.Output, values: List[float]) 
     counter.output(0).connect(select.input(1))
     select.input(0).set(graph.constant_message(raug.Bang()))
 
-    messages = [graph.message(value) for value in values]
+    registers = [graph.register() for _ in values]
+    messages = [graph.message(raug.Bang()) for _ in values]
+    for i, (value, reg, message) in enumerate(zip(values, registers, messages)):
+        reg.input(0).set(value)
+        message.input(0).connect(select.output(i))
+        message.input(1).connect(reg.output(0))
 
-    for i, value in enumerate(messages):
-        value.input(0).connect(select.output(i))
-        merge.input(i).connect(value.output(0))
+    for i, message in enumerate(messages):
+        merge.input(i).connect(message.output(0))
 
-    return merge
+    return merge, counter
 
 
 if __name__ == "__main__":
@@ -45,23 +49,26 @@ if __name__ == "__main__":
     sr = graph.sample_rate()
     phase = graph.phase_accum()
 
-    freq_param = raug.Param()
-    freq_param.set(440.0)
-
-    amp_param = raug.Param()
+    amp_param = raug.Param("amp")
     amp_param.set(0.2)
 
-    decay = raug.Param()
+    decay = raug.Param("decay")
     decay.set(0.05)
 
-    freq = graph.param(freq_param).smooth()
+    rate = raug.Param("rate")
+    rate.set(0.125)
+
     amp = graph.param(amp_param).smooth()
 
     trig = graph.metro()
-    trig.input(0).set(0.125)
+    trig.input(0).connect(graph.param(rate).output(0))
 
     values = [440.0, 660.0, 880.0, 1100.0]
-    freq = sequencer(graph, trig.output(0), values)
+    freqs = [raug.Param(f"freq{i}") for i in range(len(values))]
+    for i, freq in enumerate(freqs):
+        freq.set(values[i])
+    freqs = [graph.param(freq).smooth() for freq in freqs]
+    freq, counter = sequencer(graph, trig.output(0), freqs)
 
     increment = freq / sr
     phase.input("increment").connect(increment.output(0))
@@ -77,6 +84,21 @@ if __name__ == "__main__":
     runtime = graph.build_runtime()
     handle = runtime.run()
 
-    time.sleep(1.0)
+    print("press q to quit")
+    while True:
+        inp = input("> ").strip()
+        if inp == "q":
+            break
+        if inp.startswith("freq"):
+            _, index, value = inp.split()
+            index = index.strip()
+            value = value.strip()
+            runtime.param_named(f"freq{index}").set(float(value))
+        if inp.startswith("amp"):
+            amp_param.set(float(inp.split()[1].strip()))
+        if inp.startswith("decay"):
+            decay.set(float(inp.split()[1].strip()))
+        if inp.startswith("rate"):
+            rate.set(float(inp.split()[1].strip()))
 
     handle.stop()

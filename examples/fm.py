@@ -13,10 +13,10 @@ if __name__ == "__main__":
     pa.input(0).connect(sr.recip().output(0))
     pa = pa % 1.0
 
-    freq1 = raug.Param()
+    freq1 = raug.Param("freq1")
     freq1.set(440.0)
 
-    freq2 = raug.Param()
+    freq2 = raug.Param("freq2")
     freq2.set(220.0)
 
     sine1 = (pa * freq1 * 2.0 * math.pi).sin()

@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 use raug::prelude::*;
 
 #[pyclass(name = "Graph")]
-pub struct PyGraph(pub Graph);
+pub struct PyGraph(#[allow(unused)] pub(crate) Graph);
 
 #[pymethods]
 impl PyGraph {

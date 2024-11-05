@@ -42,6 +42,10 @@ impl PyGraphBuilder {
         Ok(())
     }
 
+    pub fn print(&self) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.print(None, None)))
+    }
+
     pub fn sample_rate(&self) -> PyResult<PyNode> {
         Ok(PyNode(self.0.sample_rate()))
     }
@@ -96,6 +100,10 @@ impl PyGraphBuilder {
                 "message must be f64, i64, or str",
             ))
         }
+    }
+
+    pub fn register(&self) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.register()))
     }
 
     pub fn metro(&self) -> PyResult<PyNode> {

@@ -183,8 +183,8 @@ impl PyInput {
         }
     }
 
-    pub fn param(&self) -> PyParam {
-        PyParam(self.0.param())
+    pub fn param(&self, name: String) -> PyParam {
+        PyParam(self.0.param(name))
     }
 
     pub fn connect(&self, node: Bound<PyOutput>) -> PyResult<()> {
@@ -216,8 +216,8 @@ pub struct PyParam(pub(crate) Param);
 impl PyParam {
     #[new]
     #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        PyParam(Param::new())
+    pub fn new(name: String) -> Self {
+        PyParam(Param::new(name))
     }
 
     pub fn set(&self, value: Bound<PyAny>) -> PyResult<()> {

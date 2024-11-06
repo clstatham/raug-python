@@ -63,15 +63,22 @@ impl PyGraphBuilder {
     }
 
     pub fn phase_accum(&self) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.phase_accum()))
+        Ok(PyNode(self.0.add(PhaseAccumulator::default())))
     }
 
-    pub fn sine_osc(&self) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.sine_osc()))
+    #[pyo3(signature = (frequency=440.0))]
+    pub fn sine_osc(&self, frequency: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(SineOscillator::new(frequency))))
     }
 
-    pub fn saw_osc(&self) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.saw_osc()))
+    #[pyo3(signature = (frequency=440.0))]
+    pub fn saw_osc(&self, frequency: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(SawOscillator::new(frequency))))
+    }
+
+    #[pyo3(signature = (frequency=440.0))]
+    pub fn bl_saw_osc(&self, frequency: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(BlSawOscillator::new(frequency))))
     }
 
     pub fn constant(&self, value: f64) -> PyResult<PyNode> {
@@ -86,14 +93,14 @@ impl PyGraphBuilder {
         let buffer = Buffer::load_wav(path)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
         let buffer = AudioBuffer::new(buffer);
-        Ok(PyNode(self.0.add_processor(buffer)))
+        Ok(PyNode(self.0.add(buffer)))
     }
 
     pub fn buffer(&self, contents: Vec<f64>) -> PyResult<PyNode> {
         let samples: Vec<_> = contents.into_iter().map(Sample::new).collect();
         let buffer = Buffer::from_slice(&samples);
         let buffer = AudioBuffer::new(buffer);
-        Ok(PyNode(self.0.add_processor(buffer)))
+        Ok(PyNode(self.0.add(buffer)))
     }
 
     pub fn message(&self, message: Bound<PyAny>) -> PyResult<PyNode> {
@@ -153,7 +160,7 @@ impl PyGraphBuilder {
     }
 
     pub fn noise_osc(&self) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.noise_osc()))
+        Ok(PyNode(self.0.add(NoiseOscillator::default())))
     }
 
     pub fn sample_and_hold(&self) -> PyResult<PyNode> {
@@ -175,6 +182,6 @@ impl PyGraphBuilder {
                 processor.threshold = threshold.extract()?;
             }
         }
-        Ok(PyNode(self.0.add_processor(processor)))
+        Ok(PyNode(self.0.add(processor)))
     }
 }

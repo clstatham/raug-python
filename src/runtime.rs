@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use raug::prelude::*;
 
-use crate::{graph::PyGraph, node_builder::PyParam};
+use crate::{graph::PyGraph, graph_builder::PyGraphBuilder, node_builder::PyParam};
 
 #[pyclass(name = "Runtime")]
 pub struct PyRuntime(pub(crate) Runtime);
@@ -53,5 +53,10 @@ pub struct PyRuntimeHandle(pub(crate) RuntimeHandle);
 impl PyRuntimeHandle {
     pub fn stop(&self) {
         self.0.stop();
+    }
+
+    pub fn hot_reload(&self, graph: Bound<PyGraphBuilder>) -> PyResult<()> {
+        self.0.hot_reload(graph.borrow().build()?.0.clone());
+        Ok(())
     }
 }

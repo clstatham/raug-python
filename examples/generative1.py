@@ -1,11 +1,11 @@
 import raug
 from typing import List
-from example_utils import random_osc, repl, fm_sine_osc, random
+from example_utils import repl, fm_sine_osc, random
 from envelope import decay_env
 
 
 def pick_randomly(graph: raug.GraphBuilder, trig: raug.Node, nodes: List[raug.Node]) -> raug.Node:
-    index = (random(graph, trig) * len(nodes)).floor()
+    index = (random(graph, trig) * (len(nodes) + 1)) % len(nodes)
     select = graph.select(len(nodes))
     select.input("in").connect(graph.constant_message(raug.Bang()).output(0))
     select.input("index").connect(index.output(0))
@@ -19,6 +19,36 @@ def pick_randomly(graph: raug.GraphBuilder, trig: raug.Node, nodes: List[raug.No
         merge.input(i).connect(msg.output(0))
 
     return merge
+
+
+def random_tones(graph: raug.GraphBuilder, name: str, rate_float: float, modfreqs_float: List[float], freqs_float: List[float], decays_float: List[float]) -> raug.Node:
+    # create a master metronome to drive the random selection
+    master = graph.metro()
+    rate = master.input(0).param(f"rate_{name}")
+    rate.set(rate_float)
+
+    # select a random frequency
+    freq = pick_randomly(
+        graph, master, [graph.constant(f) for f in freqs_float])
+
+    # select a random decay
+    decay = pick_randomly(
+        graph, master, [graph.constant(d) for d in decays_float])
+
+    # select a random mod frequency
+    modfreq = pick_randomly(
+        graph, master, [graph.constant(m) for m in modfreqs_float])
+
+    # create the envelope
+    env = decay_env(graph, master, decay)
+
+    # create the modulating oscillator
+    mod = fm_sine_osc(graph, modfreq, graph.constant(0.0))
+
+    # create the carrier oscillator
+    osc = fm_sine_osc(graph, freq, mod)
+
+    return osc * env
 
 
 if __name__ == "__main__":
@@ -42,46 +72,18 @@ if __name__ == "__main__":
     amp_param.set(0.2)
     amp = graph.param(amp_param).smooth()
 
-    rate = graph.constant(rates_float[0])
+    sine1 = random_tones(graph, "tone1", 0.125, modfreqs_float,
+                         freqs_float, decays_float)
 
-    clock1 = graph.metro()
-    clock1.input(0).connect(rate.output(0))
+    sine2 = random_tones(graph, "tone2", 0.25, modfreqs_float,
+                         freqs_float, decays_float)
 
-    clock2_rate = pick_randomly(
-        graph, clock1, [graph.constant(r) for r in rates_float])
+    sine3 = random_tones(graph, "tone3", 0.5, modfreqs_float,
+                         freqs_float, decays_float)
 
-    clock = graph.metro()
-    clock.input(0).connect(clock2_rate.output(0))
+    oscs = sine1 + sine2 + sine3
 
-    modfreqs = [raug.Param(f"modfreq{i}") for i in range(len(modfreqs_float))]
-    for i, freq in enumerate(modfreqs):
-        freq.set(modfreqs_float[i])
-
-    modulators = [
-        fm_sine_osc(graph, graph.param(modfreq), graph.constant(0.0)) for modfreq in modfreqs
-    ]
-
-    decays = [raug.Param(f"decay{i}") for i in range(len(decays_float))]
-    for i, decay in enumerate(decays):
-        decay.set(decays_float[i])
-
-    envelopes = [decay_env(graph, clock, graph.param(decay))
-                 for decay in decays]
-
-    freqs = [raug.Param(f"freq{i}") for i in range(len(freqs_float))]
-    for i, freq in enumerate(freqs):
-        freq.set(freqs_float[i])
-
-    oscs = [
-        fm_sine_osc(graph, graph.param(freq),
-                    pick_randomly(graph, clock, modulators))
-        for freq in freqs
-    ]
-
-    sine = pick_randomly(graph, clock, oscs) * \
-        pick_randomly(graph, clock, envelopes)
-
-    mix = sine * amp
+    mix = oscs * amp
 
     mix.output(0).connect(out1.input(0))
     mix.output(0).connect(out2.input(0))

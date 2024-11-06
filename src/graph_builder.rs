@@ -1,6 +1,7 @@
 use std::fs::File;
 
-use pyo3::prelude::*;
+use dynamics::PeakLimiter;
+use pyo3::{prelude::*, types::PyDict};
 use raug::prelude::*;
 
 use crate::{
@@ -27,6 +28,17 @@ impl PyGraphBuilder {
 
     pub fn build_runtime(&self) -> PyResult<PyRuntime> {
         Ok(PyRuntime(self.0.build_runtime()))
+    }
+
+    pub fn connect(
+        &self,
+        src: &PyNode,
+        src_output: u32,
+        dst: &PyNode,
+        dst_input: u32,
+    ) -> PyResult<()> {
+        self.0.connect(&src.0, src_output, &dst.0, dst_input);
+        Ok(())
     }
 
     pub fn add_input(&self) -> PyResult<PyNode> {
@@ -66,18 +78,22 @@ impl PyGraphBuilder {
         Ok(PyNode(self.0.constant(value)))
     }
 
+    pub fn param(&self, node: &PyParam) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.param(&node.0)))
+    }
+
     pub fn load_buffer(&self, path: &str) -> PyResult<PyNode> {
         let buffer = Buffer::load_wav(path)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
-        let reader = BufferReader::new(buffer);
-        Ok(PyNode(self.0.add_processor(reader)))
+        let buffer = AudioBuffer::new(buffer);
+        Ok(PyNode(self.0.add_processor(buffer)))
     }
 
     pub fn buffer(&self, contents: Vec<f64>) -> PyResult<PyNode> {
         let samples: Vec<_> = contents.into_iter().map(Sample::new).collect();
         let buffer = Buffer::from_slice(&samples);
-        let reader = BufferReader::new(buffer);
-        Ok(PyNode(self.0.add_processor(reader)))
+        let buffer = AudioBuffer::new(buffer);
+        Ok(PyNode(self.0.add_processor(buffer)))
     }
 
     pub fn message(&self, message: Bound<PyAny>) -> PyResult<PyNode> {
@@ -144,18 +160,18 @@ impl PyGraphBuilder {
         Ok(PyNode(self.0.sample_and_hold()))
     }
 
-    pub fn connect(
-        &self,
-        src: &PyNode,
-        src_output: u32,
-        dst: &PyNode,
-        dst_input: u32,
-    ) -> PyResult<()> {
-        self.0.connect(&src.0, src_output, &dst.0, dst_input);
-        Ok(())
-    }
+    #[pyo3(signature = (**kwargs))]
+    pub fn peak_limiter(&self, kwargs: Option<Bound<PyDict>>) -> PyResult<PyNode> {
+        let mut processor = PeakLimiter::default();
 
-    pub fn param(&self, node: &PyParam) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.param(&node.0)))
+        if let Some(kwargs) = kwargs {
+            if let Ok(Some(release)) = kwargs.get_item("release") {
+                processor.release = release.extract()?;
+            }
+            if let Ok(Some(threshold)) = kwargs.get_item("threshold") {
+                processor.threshold = threshold.extract()?;
+            }
+        }
+        Ok(PyNode(self.0.add_processor(processor)))
     }
 }

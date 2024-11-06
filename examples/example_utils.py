@@ -36,7 +36,7 @@ def sampler(graph: raug.GraphBuilder, trig: raug.Node, pitch: raug.Node, buffer:
     pa_freq = freq / length
     pa.input(0).connect(pa_freq.output(0))
     index = pa * length
-    buffer.input("position").connect(index.output(0))
+    buffer.input("index").connect(index.output(0))
     return buffer.output("out").make_node()
 
 

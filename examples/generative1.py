@@ -68,8 +68,11 @@ if __name__ == "__main__":
 
     mix = oscs * amp
 
-    mix.output(0).connect(out1.input(0))
-    mix.output(0).connect(out2.input(0))
+    master = graph.peak_limiter()
+    master.input(0).connect(mix.output(0))
+
+    master.output(0).connect(out1.input(0))
+    master.output(0).connect(out2.input(0))
 
     runtime = graph.build_runtime()
     handle = runtime.run()

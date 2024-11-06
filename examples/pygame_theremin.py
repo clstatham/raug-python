@@ -31,7 +31,7 @@ if __name__ == "__main__":
     freq = graph.param(freq_param).smooth()
     amp = graph.param(amp_param).smooth()
 
-    sine = graph.sine_osc()
+    sine = graph.bl_square_osc()
     sine.input("frequency").connect(freq.output(0))
 
     sine = sine * amp

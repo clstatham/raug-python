@@ -81,6 +81,13 @@ impl PyGraphBuilder {
         Ok(PyNode(self.0.add(BlSawOscillator::new(frequency))))
     }
 
+    #[pyo3(signature = (frequency=440.0, pulse_width=0.5))]
+    pub fn bl_square_osc(&self, frequency: f64, pulse_width: f64) -> PyResult<PyNode> {
+        Ok(PyNode(
+            self.0.add(BlSquareOscillator::new(frequency, pulse_width)),
+        ))
+    }
+
     pub fn constant(&self, value: f64) -> PyResult<PyNode> {
         Ok(PyNode(self.0.constant(value)))
     }

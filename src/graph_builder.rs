@@ -66,6 +66,20 @@ impl PyGraphBuilder {
         Ok(PyNode(self.0.constant(value)))
     }
 
+    pub fn load_buffer(&self, path: &str) -> PyResult<PyNode> {
+        let buffer = Buffer::load_wav(path)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+        let reader = BufferReader::new(buffer);
+        Ok(PyNode(self.0.add_processor(reader)))
+    }
+
+    pub fn buffer(&self, contents: Vec<f64>) -> PyResult<PyNode> {
+        let samples: Vec<_> = contents.into_iter().map(Sample::new).collect();
+        let buffer = Buffer::from_slice(&samples);
+        let reader = BufferReader::new(buffer);
+        Ok(PyNode(self.0.add_processor(reader)))
+    }
+
     pub fn message(&self, message: Bound<PyAny>) -> PyResult<PyNode> {
         if let Ok(message) = message.extract::<PyMessage>() {
             Ok(PyNode(self.0.message(message)))

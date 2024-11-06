@@ -41,30 +41,31 @@ if __name__ == "__main__":
 
     amp_param = raug.Param("amp")
     amp_param.set(0.2)
+    amp = graph.param(amp_param).smooth()
 
     decay = raug.Param("decay")
     decay.set(0.05)
+    decay = graph.param(decay).smooth()
 
     rate = raug.Param("rate")
     rate.set(0.125)
-
-    amp = graph.param(amp_param).smooth()
+    rate = graph.param(rate).smooth()
 
     trig = graph.metro()
-    trig.input(0).connect(graph.param(rate).output(0))
+    trig.input(0).connect(rate.output(0))
 
     values = [440.0, 660.0, 880.0, 1100.0]
-    freqs = [raug.Param(f"freq{i}") for i in range(len(values))]
-    for i, freq in enumerate(freqs):
-        freq.set(values[i])
-    freqs = [graph.param(freq).smooth() for freq in freqs]
+    freq_params = [raug.Param(f"freq{i}") for i in range(len(values))]
+    freqs = [graph.param(freq) for freq in freq_params]
+    for freq_param, value in zip(freq_params, values):
+        freq_param.set(value)
     freq, counter = sequencer(graph, trig.output(0), freqs)
 
     increment = freq / sr
     phase.input("increment").connect(increment.output(0))
     sine = (phase * 2.0 * math.pi).sin()
 
-    amp = decay_env(graph, trig, graph.param(decay)) * amp
+    amp = decay_env(graph, trig, decay) * amp
 
     sine = sine * amp
 

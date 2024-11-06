@@ -15,12 +15,14 @@ if __name__ == "__main__":
 
     freq1 = raug.Param("freq1")
     freq1.set(440.0)
+    freq1 = graph.param(freq1)
 
     freq2 = raug.Param("freq2")
     freq2.set(220.0)
+    freq2 = graph.param(freq2)
 
-    sine1 = (pa * graph.param(freq1) * 2.0 * math.pi).sin()
-    sine2 = (pa * graph.param(freq2) * 2.0 * math.pi + sine1).sin()
+    sine1 = (pa * freq1 * 2.0 * math.pi).sin()
+    sine2 = (pa * freq2 * 2.0 * math.pi + sine1).sin()
 
     final = sine2 * 0.2
 

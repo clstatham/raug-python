@@ -33,6 +33,10 @@ impl PyNode {
         }
     }
 
+    pub fn make_register(&self) -> PyNode {
+        PyNode(self.0.make_register())
+    }
+
     pub fn __add__(&self, other: Bound<PyAny>) -> PyResult<PyNode> {
         if let Ok(other) = other.extract::<PyNode>() {
             Ok(PyNode(self.0.clone() + other.0.clone()))
@@ -133,18 +137,6 @@ impl PyNode {
         PyNode(self.0.tan())
     }
 
-    pub fn asin(&self) -> PyNode {
-        PyNode(self.0.asin())
-    }
-
-    pub fn acos(&self) -> PyNode {
-        PyNode(self.0.acos())
-    }
-
-    pub fn atan(&self) -> PyNode {
-        PyNode(self.0.atan())
-    }
-
     pub fn atan2(&self, other: &PyNode) -> PyNode {
         PyNode(self.0.atan2(other.0.clone()))
     }
@@ -225,6 +217,14 @@ impl PyOutput {
 
     pub fn node(&self) -> PyNode {
         PyNode(self.0.node())
+    }
+
+    pub fn make_node(&self) -> PyNode {
+        PyNode(self.0.make_node())
+    }
+
+    pub fn make_register(&self) -> PyNode {
+        PyNode(self.0.make_register())
     }
 }
 

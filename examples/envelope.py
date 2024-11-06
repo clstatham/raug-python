@@ -25,31 +25,36 @@ if __name__ == "__main__":
 
     rate = raug.Param("rate")
     rate.set(0.5)
+    rate = graph.param(rate).smooth()
 
     decay1 = raug.Param("decay1")
     decay1.set(0.05)
+    decay1 = graph.param(decay1).smooth()
 
     decay2 = raug.Param("decay2")
     decay2.set(0.1)
+    decay2 = graph.param(decay2).smooth()
 
     freq1 = raug.Param("freq1")
     freq1.set(880.0)
+    freq1 = graph.param(freq1).smooth()
 
     freq2 = raug.Param("freq2")
     freq2.set(220.0)
+    freq2 = graph.param(freq2).smooth()
 
     trig = graph.metro()
-    trig.input(0).connect(graph.param(rate).output(0))
+    trig.input(0).connect(rate.output(0))
 
-    amp1 = decay_env(graph, trig, graph.param(decay1))
-    amp2 = decay_env(graph, trig, graph.param(decay2))
+    amp1 = decay_env(graph, trig, decay1)
+    amp2 = decay_env(graph, trig, decay2)
 
     pa1 = graph.phase_accum()
-    pa1.input(0).connect((graph.param(freq1) / sr).output(0))
+    pa1.input(0).connect((freq1 / sr).output(0))
     pa1 = pa1 % 1.0
 
     pa2 = graph.phase_accum()
-    pa2.input(0).connect((graph.param(freq2) / sr).output(0))
+    pa2.input(0).connect((freq2 / sr).output(0))
     pa2 = pa2 % 1.0
 
     sine1 = (pa1 * 2.0 * math.pi).sin() * amp1

@@ -1,24 +1,7 @@
 import raug
 from typing import List
-from example_utils import repl, fm_sine_osc, random
+from example_utils import *
 from envelope import decay_env
-
-
-def pick_randomly(graph: raug.GraphBuilder, trig: raug.Node, nodes: List[raug.Node]) -> raug.Node:
-    index = (random(graph, trig) * (len(nodes) + 1)) % len(nodes)
-    select = graph.select(len(nodes))
-    select.input("in").connect(graph.constant_message(raug.Bang()).output(0))
-    select.input("index").connect(index.output(0))
-
-    merge = graph.merge(len(nodes))
-
-    msgs = [graph.message(raug.Bang()) for _ in nodes]
-    for i, (node, msg) in enumerate(zip(nodes, msgs)):
-        msg.input(0).connect(select.output(i))
-        msg.input(1).connect(node.output(0))
-        merge.input(i).connect(msg.output(0))
-
-    return merge
 
 
 def random_tones(graph: raug.GraphBuilder, name: str, rate_float: float, modfreqs_float: List[float], freqs_float: List[float], decays_float: List[float]) -> raug.Node:
@@ -70,7 +53,7 @@ if __name__ == "__main__":
 
     amp_param = raug.Param("amp")
     amp_param.set(0.2)
-    amp = graph.param(amp_param).smooth()
+    amp = graph.param(amp_param)
 
     sine1 = random_tones(graph, "tone1", 0.125, modfreqs_float,
                          freqs_float, decays_float)
@@ -87,8 +70,6 @@ if __name__ == "__main__":
 
     mix.output(0).connect(out1.input(0))
     mix.output(0).connect(out2.input(0))
-
-    graph.write_dot("target/generative1.dot")
 
     runtime = graph.build_runtime()
     handle = runtime.run()

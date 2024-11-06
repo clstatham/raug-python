@@ -1,5 +1,6 @@
 import raug
 import math
+from typing import List
 
 
 def random(graph: raug.GraphBuilder, trig: raug.Node) -> raug.Node:
@@ -24,6 +25,36 @@ def fm_sine_osc(graph: raug.GraphBuilder, freq: raug.Node, mod: raug.Node) -> ra
     phase.input("increment").connect(increment.output(0))
     sine = (phase * 2.0 * math.pi + mod).sin()
     return sine
+
+
+def sampler(graph: raug.GraphBuilder, trig: raug.Node, pitch: raug.Node, buffer: raug.Node) -> raug.Node:
+    sr = graph.sample_rate()
+    pa = graph.saw_osc()
+    pa.input(2).connect(trig.output(0))
+    length = buffer.output("length").make_node()
+    freq = pitch.midi2freq() / 440.0 * sr
+    pa_freq = freq / length
+    pa.input(0).connect(pa_freq.output(0))
+    index = pa * length
+    buffer.input("position").connect(index.output(0))
+    return buffer.output("out").make_node()
+
+
+def pick_randomly(graph: raug.GraphBuilder, trig: raug.Node, nodes: List[raug.Node]) -> raug.Node:
+    index = (random(graph, trig) * (len(nodes) + 1)) % len(nodes)
+    select = graph.select(len(nodes))
+    select.input("in").connect(graph.constant_message(raug.Bang()).output(0))
+    select.input("index").connect(index.output(0))
+
+    merge = graph.merge(len(nodes))
+
+    msgs = [graph.message(raug.Bang()) for _ in nodes]
+    for i, (node, msg) in enumerate(zip(nodes, msgs)):
+        msg.input(0).connect(select.output(i))
+        msg.input(1).connect(node.output(0))
+        merge.input(i).connect(msg.output(0))
+
+    return merge
 
 
 def repl(runtime: raug.Runtime):

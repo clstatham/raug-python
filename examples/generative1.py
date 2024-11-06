@@ -86,6 +86,8 @@ if __name__ == "__main__":
     mix.output(0).connect(out1.input(0))
     mix.output(0).connect(out2.input(0))
 
+    graph.write_dot("target/generative1.dot")
+
     runtime = graph.build_runtime()
     handle = runtime.run()
 

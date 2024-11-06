@@ -165,6 +165,9 @@ impl PyGraphBuilder {
         let mut processor = PeakLimiter::default();
 
         if let Some(kwargs) = kwargs {
+            if let Ok(Some(attack)) = kwargs.get_item("attack") {
+                processor.attack = attack.extract()?;
+            }
             if let Ok(Some(release)) = kwargs.get_item("release") {
                 processor.release = release.extract()?;
             }

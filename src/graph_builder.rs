@@ -1,7 +1,7 @@
 use std::fs::File;
 
 use dynamics::PeakLimiter;
-use pyo3::{prelude::*, types::PyDict};
+use pyo3::prelude::*;
 use raug::prelude::*;
 
 use crate::{
@@ -92,8 +92,8 @@ impl PyGraphBuilder {
         Ok(PyNode(self.0.constant(value)))
     }
 
-    pub fn param(&self, node: &PyParam) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.param(&node.0)))
+    pub fn add_param(&self, node: &PyParam) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add_param(node.0.clone())))
     }
 
     pub fn load_buffer(&self, path: &str) -> PyResult<PyNode> {
@@ -147,23 +147,26 @@ impl PyGraphBuilder {
     }
 
     pub fn register(&self) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.register()))
+        Ok(PyNode(self.0.add(Register::default())))
     }
 
-    pub fn metro(&self) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.metro()))
+    #[pyo3(signature = (period=1.0))]
+    pub fn metro(&self, period: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(Metro::new(period))))
     }
 
+    #[pyo3(signature = (num_outputs=2))]
     pub fn select(&self, num_outputs: usize) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.select(num_outputs)))
+        Ok(PyNode(self.0.add(Select::new(num_outputs))))
     }
 
+    #[pyo3(signature = (num_inputs=2))]
     pub fn merge(&self, num_inputs: usize) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.merge(num_inputs)))
+        Ok(PyNode(self.0.add(Merge::new(num_inputs))))
     }
 
     pub fn counter(&self) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.counter()))
+        Ok(PyNode(self.0.add(Counter::default())))
     }
 
     pub fn noise_osc(&self) -> PyResult<PyNode> {
@@ -171,24 +174,55 @@ impl PyGraphBuilder {
     }
 
     pub fn sample_and_hold(&self) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.sample_and_hold()))
+        Ok(PyNode(self.0.add(SampleAndHold::default())))
     }
 
-    #[pyo3(signature = (**kwargs))]
-    pub fn peak_limiter(&self, kwargs: Option<Bound<PyDict>>) -> PyResult<PyNode> {
+    #[pyo3(signature = (threshold=1.0, attack=0.01, release=0.1))]
+    pub fn peak_limiter(&self, threshold: f64, attack: f64, release: f64) -> PyResult<PyNode> {
         let mut processor = PeakLimiter::default();
-
-        if let Some(kwargs) = kwargs {
-            if let Ok(Some(attack)) = kwargs.get_item("attack") {
-                processor.attack = attack.extract()?;
-            }
-            if let Ok(Some(release)) = kwargs.get_item("release") {
-                processor.release = release.extract()?;
-            }
-            if let Ok(Some(threshold)) = kwargs.get_item("threshold") {
-                processor.threshold = threshold.extract()?;
-            }
-        }
+        processor.threshold = threshold;
+        processor.attack = attack;
+        processor.release = release;
         Ok(PyNode(self.0.add(processor)))
+    }
+
+    #[pyo3(signature = (cutoff=1000.0, resonance=0.1))]
+    pub fn moog_ladder(&self, cutoff: f64, resonance: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(MoogLadder::new(cutoff, resonance))))
+    }
+
+    #[pyo3(signature = (cutoff=1000.0, q=0.1))]
+    pub fn biquad_lowpass(&self, cutoff: f64, q: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(AutoBiquad::lowpass(cutoff, q))))
+    }
+
+    #[pyo3(signature = (cutoff=1000.0, q=0.1))]
+    pub fn biquad_highpass(&self, cutoff: f64, q: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(AutoBiquad::highpass(cutoff, q))))
+    }
+
+    #[pyo3(signature = (cutoff=1000.0, q=0.1))]
+    pub fn biquad_bandpass(&self, cutoff: f64, q: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(AutoBiquad::bandpass(cutoff, q))))
+    }
+
+    #[pyo3(signature = (cutoff=1000.0, q=0.1))]
+    pub fn biquad_notch(&self, cutoff: f64, q: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(AutoBiquad::notch(cutoff, q))))
+    }
+
+    #[pyo3(signature = (cutoff=1000.0, q=0.1, gain=0.0))]
+    pub fn biquad_peak(&self, cutoff: f64, q: f64, gain: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(AutoBiquad::peak(cutoff, q, gain))))
+    }
+
+    #[pyo3(signature = (cutoff=1000.0, q=0.1, gain=0.0))]
+    pub fn biquad_lowshelf(&self, cutoff: f64, q: f64, gain: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(AutoBiquad::lowshelf(cutoff, q, gain))))
+    }
+
+    #[pyo3(signature = (cutoff=1000.0, q=0.1, gain=0.0))]
+    pub fn biquad_highshelf(&self, cutoff: f64, q: f64, gain: f64) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(AutoBiquad::highshelf(cutoff, q, gain))))
     }
 }

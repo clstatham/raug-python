@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     amp_param = raug.Param("amp")
     amp_param.set(0.2)
-    amp = graph.param(amp_param)
+    amp = graph.add_param(amp_param)
 
     sine1 = random_tones(graph, "tone1", 0.125, modfreqs_float,
                          freqs_float, decays_float)

@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     amp = raug.Param("amp")
     amp.set(0.2)
-    amp = graph.param(amp)
+    amp = graph.add_param(amp)
 
     trig = graph.metro()
     trig.input(0).set(0.5)

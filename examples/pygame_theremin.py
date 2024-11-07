@@ -28,10 +28,10 @@ if __name__ == "__main__":
     amp_param = raug.Param("amp")
     amp_param.set(0.0)
 
-    freq = graph.param(freq_param).smooth()
-    amp = graph.param(amp_param).smooth()
+    freq = graph.add_param(freq_param).smooth()
+    amp = graph.add_param(amp_param).smooth()
 
-    sine = graph.bl_square_osc()
+    sine = graph.sine_osc()
     sine.input("frequency").connect(freq.output(0))
 
     sine = sine * amp

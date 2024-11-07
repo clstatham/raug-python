@@ -195,8 +195,19 @@ impl PyInput {
         }
     }
 
-    pub fn param(&self, name: String) -> PyParam {
-        PyParam(self.0.param(name))
+    pub fn param(&self, name: String, initial_value: Bound<PyAny>) -> PyParam {
+        let initial_value = if let Ok(initial_value) = initial_value.extract::<f64>() {
+            Some(Message::Float(initial_value))
+        } else if let Ok(initial_value) = initial_value.extract::<i64>() {
+            Some(Message::Int(initial_value))
+        } else if let Ok(initial_value) = initial_value.extract::<String>() {
+            Some(Message::String(initial_value))
+        } else if initial_value.extract::<PyBang>().is_ok() {
+            Some(Message::Bang)
+        } else {
+            None
+        };
+        PyParam(self.0.param(name, initial_value))
     }
 
     pub fn connect(&self, node: Bound<PyOutput>) -> PyResult<()> {
@@ -236,8 +247,19 @@ pub struct PyParam(pub(crate) Param);
 impl PyParam {
     #[new]
     #[allow(clippy::new_without_default)]
-    pub fn new(name: String) -> Self {
-        PyParam(Param::new(name))
+    pub fn new(name: String, initial_value: Bound<PyAny>) -> Self {
+        let initial_value = if let Ok(initial_value) = initial_value.extract::<f64>() {
+            Some(Message::Float(initial_value))
+        } else if let Ok(initial_value) = initial_value.extract::<i64>() {
+            Some(Message::Int(initial_value))
+        } else if let Ok(initial_value) = initial_value.extract::<String>() {
+            Some(Message::String(initial_value))
+        } else if initial_value.extract::<PyBang>().is_ok() {
+            Some(Message::Bang)
+        } else {
+            None
+        };
+        Self(Param::new(name, initial_value))
     }
 
     pub fn set(&self, value: Bound<PyAny>) -> PyResult<()> {

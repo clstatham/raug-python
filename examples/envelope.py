@@ -23,24 +23,19 @@ if __name__ == "__main__":
     out1 = graph.add_output()
     out2 = graph.add_output()
 
-    rate = raug.Param("rate")
-    rate.set(0.5)
+    rate = raug.Param("rate", 0.5)
     rate = graph.add_param(rate).smooth()
 
-    decay1 = raug.Param("decay1")
-    decay1.set(0.05)
+    decay1 = raug.Param("decay1", 0.05)
     decay1 = graph.add_param(decay1).smooth()
 
-    decay2 = raug.Param("decay2")
-    decay2.set(0.1)
+    decay2 = raug.Param("decay2", 0.1)
     decay2 = graph.add_param(decay2).smooth()
 
-    freq1 = raug.Param("freq1")
-    freq1.set(880.0)
+    freq1 = raug.Param("freq1", 440.0)
     freq1 = graph.add_param(freq1).smooth()
 
-    freq2 = raug.Param("freq2")
-    freq2.set(220.0)
+    freq2 = raug.Param("freq2", 220.0)
     freq2 = graph.add_param(freq2).smooth()
 
     trig = graph.metro()

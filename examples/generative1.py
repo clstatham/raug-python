@@ -7,7 +7,7 @@ from envelope import decay_env
 def random_tones(graph: raug.GraphBuilder, name: str, rate_float: float, modfreqs_float: List[float], freqs_float: List[float], decays_float: List[float]) -> raug.Node:
     # create a master metronome to drive the random selection
     master = graph.metro()
-    rate = master.input(0).param(f"rate_{name}")
+    rate = master.input(0).param(f"rate_{name}", None)
     rate.set(rate_float)
 
     # select a random frequency
@@ -51,8 +51,7 @@ if __name__ == "__main__":
     out1 = graph.add_output()
     out2 = graph.add_output()
 
-    amp_param = raug.Param("amp")
-    amp_param.set(0.2)
+    amp_param = raug.Param("amp", 0.2)
     amp = graph.add_param(amp_param)
 
     sine1 = random_tones(graph, "tone1", 0.125, modfreqs_float,

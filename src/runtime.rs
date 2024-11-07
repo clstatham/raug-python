@@ -31,6 +31,13 @@ impl PyRuntime {
         Ok(())
     }
 
+    pub fn run_offline_to_file(&mut self, path: &str, duration: f64) -> PyResult<()> {
+        self.0
+            .run_offline_to_file(path, Duration::from_secs_f64(duration), 48_000.0, 512)
+            .unwrap();
+        Ok(())
+    }
+
     pub fn param_names(&self) -> Vec<String> {
         let mut names: Vec<_> = self
             .0

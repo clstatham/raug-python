@@ -9,6 +9,8 @@ def decay_env(graph: raug.GraphBuilder, trig: raug.Node, decay: raug.Node) -> ra
     time.input(0).connect(sr.recip().output(0))
     time.input(1).connect(trig.output(0))
 
+    time = time % 1.0
+
     env = (-time + 1.0) ** decay.recip()
     env = env.smooth()
 
@@ -62,8 +64,6 @@ if __name__ == "__main__":
 
     runtime = graph.build_runtime()
     handle = runtime.run()
-
-    inp = ""
 
     repl(runtime)
 

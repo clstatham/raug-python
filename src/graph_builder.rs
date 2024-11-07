@@ -177,6 +177,15 @@ impl PyGraphBuilder {
         Ok(PyNode(self.0.add(SampleAndHold::default())))
     }
 
+    pub fn change_detector(&self) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(Changed::default())))
+    }
+
+    #[pyo3(signature = (context="<unknown>"))]
+    pub fn check_finite(&self, context: &str) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(CheckFinite::new(context))))
+    }
+
     #[pyo3(signature = (threshold=1.0, attack=0.01, release=0.1))]
     pub fn peak_limiter(&self, threshold: f64, attack: f64, release: f64) -> PyResult<PyNode> {
         let mut processor = PeakLimiter::default();

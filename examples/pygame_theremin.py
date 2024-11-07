@@ -8,6 +8,8 @@ SCREEN_HEIGHT = 600
 BASE_FREQ = 55.0
 MAX_FREQ = 880.0
 
+MAX_AMP = 0.5
+
 if __name__ == "__main__":
     pygame.display.init()
 
@@ -44,18 +46,23 @@ if __name__ == "__main__":
     handle = runtime.run()
 
     running = True
+    x = 0.0
+    y = 0.0
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEMOTION:
+                x = event.pos[0] / SCREEN_WIDTH
+                y = event.pos[1] / SCREEN_HEIGHT
+                y = 1.0 - y
                 freq_param.set(
-                    BASE_FREQ + (event.pos[0] / SCREEN_WIDTH) * MAX_FREQ)
-                amp_param.set(0.2 - (event.pos[1] / SCREEN_HEIGHT) * 0.2)
+                    BASE_FREQ + x * MAX_FREQ)
+                amp_param.set(y * MAX_AMP)
             if event.type == pygame.WINDOWLEAVE:
                 amp_param.set(0.0)
 
-        screen.fill((0, 0, 0))
+        screen.fill((int(x * 255), int(y * 255), 0))
         pygame.display.flip()
 
     handle.stop()

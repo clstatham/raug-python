@@ -23,7 +23,7 @@ def fm_sine_osc(graph: raug.GraphBuilder, freq: raug.Node, mod: raug.Node) -> ra
     phase = graph.phase_accum()
     increment = freq / sr
     phase.input("increment").connect(increment.output(0))
-    sine = (phase * 2.0 * math.pi + mod).sin()
+    sine = (phase * 2.0 * math.pi + mod * 2.0 * math.pi).sin()
     return sine
 
 

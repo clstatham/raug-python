@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use raug::prelude::*;
 
-use crate::message::PyBang;
+use crate::message::PyMessageExt;
 
 #[derive(Clone)]
 #[pyclass(name = "Node")]
@@ -176,38 +176,14 @@ pub struct PyInput(pub(crate) Input);
 #[pymethods]
 impl PyInput {
     pub fn set(&self, value: Bound<PyAny>) -> PyResult<()> {
-        if let Ok(value) = value.extract::<PyNode>() {
-            self.0.set(value.0.clone());
-            Ok(())
-        } else if let Ok(value) = value.extract::<f64>() {
-            self.0.set(value);
-            Ok(())
-        } else if let Ok(value) = value.extract::<i64>() {
-            self.0.set(Message::Int(value));
-            Ok(())
-        } else if let Ok(value) = value.extract::<String>() {
-            self.0.set(Message::String(value));
-            Ok(())
-        } else {
-            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                "value must be f64, i64, or str",
-            ))
-        }
+        let message = Message::try_from_pyany(value)?;
+        self.0.set(message);
+        Ok(())
     }
 
-    pub fn param(&self, name: String, initial_value: Bound<PyAny>) -> PyParam {
-        let initial_value = if let Ok(initial_value) = initial_value.extract::<f64>() {
-            Some(Message::Float(initial_value))
-        } else if let Ok(initial_value) = initial_value.extract::<i64>() {
-            Some(Message::Int(initial_value))
-        } else if let Ok(initial_value) = initial_value.extract::<String>() {
-            Some(Message::String(initial_value))
-        } else if initial_value.extract::<PyBang>().is_ok() {
-            Some(Message::Bang)
-        } else {
-            None
-        };
-        PyParam(self.0.param(name, initial_value))
+    pub fn param(&self, name: String, initial_value: Bound<PyAny>) -> PyResult<PyParam> {
+        let initial_value = Message::try_from_pyany(initial_value)?;
+        Ok(PyParam(self.0.param(name, Some(initial_value))))
     }
 
     pub fn connect(&self, node: Bound<PyOutput>) -> PyResult<()> {
@@ -247,50 +223,21 @@ pub struct PyParam(pub(crate) Param);
 impl PyParam {
     #[new]
     #[allow(clippy::new_without_default)]
-    pub fn new(name: String, initial_value: Bound<PyAny>) -> Self {
-        let initial_value = if let Ok(initial_value) = initial_value.extract::<f64>() {
-            Some(Message::Float(initial_value))
-        } else if let Ok(initial_value) = initial_value.extract::<i64>() {
-            Some(Message::Int(initial_value))
-        } else if let Ok(initial_value) = initial_value.extract::<String>() {
-            Some(Message::String(initial_value))
-        } else if initial_value.extract::<PyBang>().is_ok() {
-            Some(Message::Bang)
-        } else {
-            None
-        };
-        Self(Param::new(name, initial_value))
+    pub fn new(name: String, initial_value: Bound<PyAny>) -> PyResult<Self> {
+        let initial_value = Message::try_from_pyany(initial_value)?;
+        Ok(Self(Param::new(name, Some(initial_value))))
     }
 
     pub fn set(&self, value: Bound<PyAny>) -> PyResult<()> {
-        if let Ok(value) = value.extract::<f64>() {
-            self.0.set(value);
-            Ok(())
-        } else if let Ok(value) = value.extract::<i64>() {
-            self.0.set(value);
-            Ok(())
-        } else if let Ok(value) = value.extract::<String>() {
-            self.0.set(&*value);
-            Ok(())
-        } else {
-            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                "value must be f64, i64, or str",
-            ))
-        }
+        let message = Message::try_from_pyany(value)?;
+        self.0.set(message);
+        Ok(())
     }
 
     pub fn get(&mut self, py: Python) -> PyResult<PyObject> {
         let message = self.0.get();
         if let Some(message) = message {
-            match message {
-                Message::Bang => Ok(PyBang.into_py(py)),
-                Message::Int(int) => Ok(int.into_py(py)),
-                Message::Float(float) => Ok(float.into_py(py)),
-                Message::String(string) => Ok(string.into_py(py)),
-                _ => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                    "unsupported message type",
-                )),
-            }
+            message.try_to_pyobject(py)
         } else {
             Ok(py.None())
         }

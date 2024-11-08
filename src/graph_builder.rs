@@ -6,7 +6,7 @@ use raug::prelude::*;
 
 use crate::{
     graph::PyGraph,
-    message::{PyBang, PyMessage},
+    message::PyMessageExt,
     node_builder::{PyNode, PyParam},
     runtime::PyRuntime,
 };
@@ -111,39 +111,13 @@ impl PyGraphBuilder {
     }
 
     pub fn message(&self, message: Bound<PyAny>) -> PyResult<PyNode> {
-        if let Ok(message) = message.extract::<PyMessage>() {
-            Ok(PyNode(self.0.message(message)))
-        } else if message.extract::<PyBang>().is_ok() {
-            Ok(PyNode(self.0.message(Message::Bang)))
-        } else if let Ok(message) = message.extract::<f64>() {
-            Ok(PyNode(self.0.message(message)))
-        } else if let Ok(message) = message.extract::<i64>() {
-            Ok(PyNode(self.0.message(message)))
-        } else if let Ok(message) = message.extract::<String>() {
-            Ok(PyNode(self.0.message(message)))
-        } else {
-            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                "message must be f64, i64, or str",
-            ))
-        }
+        let message = Message::try_from_pyany(message)?;
+        Ok(PyNode(self.0.message(message)))
     }
 
     pub fn constant_message(&self, message: Bound<PyAny>) -> PyResult<PyNode> {
-        if let Ok(message) = message.extract::<PyMessage>() {
-            Ok(PyNode(self.0.constant_message(message)))
-        } else if message.extract::<PyBang>().is_ok() {
-            Ok(PyNode(self.0.constant_message(Message::Bang)))
-        } else if let Ok(message) = message.extract::<f64>() {
-            Ok(PyNode(self.0.constant_message(message)))
-        } else if let Ok(message) = message.extract::<i64>() {
-            Ok(PyNode(self.0.constant_message(message)))
-        } else if let Ok(message) = message.extract::<String>() {
-            Ok(PyNode(self.0.constant_message(message)))
-        } else {
-            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                "message must be f64, i64, or str",
-            ))
-        }
+        let message = Message::try_from_pyany(message)?;
+        Ok(PyNode(self.0.constant_message(message)))
     }
 
     pub fn register(&self) -> PyResult<PyNode> {

@@ -17,11 +17,7 @@ impl PyRuntime {
     pub fn run(&mut self) -> PyResult<PyRuntimeHandle> {
         Ok(PyRuntimeHandle(
             self.0
-                .run(
-                    AudioBackend::Default,
-                    AudioDevice::Default,
-                    MidiPort::Default,
-                )
+                .run(AudioBackend::Default, AudioDevice::Default, None)
                 .unwrap(),
         ))
     }
@@ -32,7 +28,7 @@ impl PyRuntime {
                 Duration::from_secs_f64(duration as f64),
                 AudioBackend::Default,
                 AudioDevice::Default,
-                MidiPort::Default,
+                None,
             )
             .unwrap();
         Ok(())

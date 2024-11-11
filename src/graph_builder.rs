@@ -54,7 +54,7 @@ impl PyGraphBuilder {
     }
 
     pub fn write_dot(&self, path: &str) -> PyResult<()> {
-        self.0.write_dot(&mut File::create(path)?);
+        self.0.write_dot(&mut File::create(path)?).unwrap();
         Ok(())
     }
 

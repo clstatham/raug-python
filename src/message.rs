@@ -5,7 +5,7 @@ use raug::prelude::*;
 #[derive(Clone)]
 pub enum PyMessage {
     Bang(PyBang),
-    Float(f64),
+    Float(Sample),
     Int(i64),
     String(String),
 }
@@ -22,13 +22,13 @@ impl PyMessage {
     }
 }
 
-impl TryFrom<Message> for PyMessage {
+impl TryFrom<&Message> for PyMessage {
     type Error = PyErr;
-    fn try_from(message: Message) -> Result<Self, Self::Error> {
+    fn try_from(message: &Message) -> Result<Self, Self::Error> {
         match message {
             Message::Bang => Ok(PyMessage::Bang(PyBang)),
-            Message::Float(float) => Ok(PyMessage::Float(float)),
-            Message::Int(int) => Ok(PyMessage::Int(int)),
+            Message::Float(float) => Ok(PyMessage::Float(*float)),
+            Message::Int(int) => Ok(PyMessage::Int(*int)),
             Message::String(string) => Ok(PyMessage::String(string.to_string())),
             _ => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
                 "unsupported message type",
@@ -65,12 +65,12 @@ impl PyMessageExt for Message {
             Ok(message.into())
         } else if message.extract::<PyBang>().is_ok() {
             Ok(Message::Bang)
-        } else if let Ok(message) = message.extract::<f64>() {
+        } else if let Ok(message) = message.extract::<Sample>() {
             Ok(Message::Float(message))
         } else if let Ok(message) = message.extract::<i64>() {
             Ok(Message::Int(message))
         } else if let Ok(message) = message.extract::<String>() {
-            Ok(Message::String(message))
+            Ok(Message::from(message))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
                 "message must be Bang, f64, i64, or str",

@@ -1,3 +1,5 @@
+#![allow(clippy::unnecessary_cast)]
+
 use pyo3::prelude::*;
 
 pub mod graph;

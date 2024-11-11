@@ -42,7 +42,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone() + other.0.clone()))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() + other.0.clone()))
-        } else if let Ok(other) = other.extract::<f64>() {
+        } else if let Ok(other) = other.extract::<Sample>() {
             Ok(PyNode(self.0.clone() + other))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -56,7 +56,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone() - other.0.clone()))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() - other.0.clone()))
-        } else if let Ok(other) = other.extract::<f64>() {
+        } else if let Ok(other) = other.extract::<Sample>() {
             Ok(PyNode(self.0.clone() - other))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -70,7 +70,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone() * other.0.clone()))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() * other.0.clone()))
-        } else if let Ok(other) = other.extract::<f64>() {
+        } else if let Ok(other) = other.extract::<Sample>() {
             Ok(PyNode(self.0.clone() * other))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -84,7 +84,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone() / other.0.clone()))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() * other.0.clone()))
-        } else if let Ok(other) = other.extract::<f64>() {
+        } else if let Ok(other) = other.extract::<Sample>() {
             Ok(PyNode(self.0.clone() / other))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -98,7 +98,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone().powf(other.0.clone())))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() * other.0.clone()))
-        } else if let Ok(other) = other.extract::<f64>() {
+        } else if let Ok(other) = other.extract::<Sample>() {
             Ok(PyNode(self.0.clone().powf(other)))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -112,7 +112,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone() % other.0.clone()))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() % other.0.clone()))
-        } else if let Ok(other) = other.extract::<f64>() {
+        } else if let Ok(other) = other.extract::<Sample>() {
             Ok(PyNode(self.0.clone() % other))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -146,7 +146,7 @@ impl PyNode {
     }
 
     pub fn smooth(&self) -> PyNode {
-        PyNode(self.0.smooth())
+        PyNode(self.0.smooth(0.01))
     }
 
     pub fn midi2freq(&self) -> PyNode {

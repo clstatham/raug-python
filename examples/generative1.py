@@ -18,7 +18,7 @@ def scale_freqs() -> List[float]:
     # shift by 3 semitones to start on E
     scale = [m + 3 for m in scale]
     scale = [m - 12 for m in scale] + scale + \
-        [m + 12 for m in scale] + [m + 24 for m in scale]
+        [m + 12 for m in scale]
     return [midi_to_freq(m) for m in scale]
 
 
@@ -85,7 +85,7 @@ def random_tones(graph: raug.GraphBuilder, rates_float: List[float], ratios_floa
 
 if __name__ == "__main__":
     # try changing these values!
-    num_tones = 12
+    num_tones = 10
     freqs_float = scale_freqs()
     ratios_float = [0.25, 0.5, 1.0, 2.0]
     decays_float = [0.1, 0.1, 0.2, 0.5]
@@ -94,8 +94,8 @@ if __name__ == "__main__":
 
     graph = raug.GraphBuilder()
 
-    out1 = graph.add_output()
-    out2 = graph.add_output()
+    out1 = graph.add_audio_output()
+    out2 = graph.add_audio_output()
 
     amp = graph.add_param(raug.Param("amp", 0.5))
 
@@ -115,8 +115,6 @@ if __name__ == "__main__":
     master.output(0).connect(out2.input(0))
 
     runtime = graph.build_runtime()
-
-    # runtime.run_offline_to_file("target/generative1_6.wav", 60.0)
 
     handle = runtime.run()
 

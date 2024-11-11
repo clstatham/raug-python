@@ -22,8 +22,8 @@ if __name__ == "__main__":
 
     sr = graph.sample_rate()
 
-    out1 = graph.add_output()
-    out2 = graph.add_output()
+    out1 = graph.add_audio_output()
+    out2 = graph.add_audio_output()
 
     rate = raug.Param("rate", 0.5)
     rate = graph.add_param(rate).smooth()

@@ -3,8 +3,8 @@ import raug
 if __name__ == "__main__":
     graph = raug.GraphBuilder()
 
-    out1 = graph.add_output()
-    out2 = graph.add_output()
+    out1 = graph.add_audio_output()
+    out2 = graph.add_audio_output()
 
     sine = graph.sine_osc()
     sine.input("frequency").set(440.0)

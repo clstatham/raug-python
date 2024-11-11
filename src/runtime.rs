@@ -16,24 +16,36 @@ impl PyRuntime {
 
     pub fn run(&mut self) -> PyResult<PyRuntimeHandle> {
         Ok(PyRuntimeHandle(
-            self.0.run(Backend::Default, Device::Default).unwrap(),
+            self.0
+                .run(
+                    AudioBackend::Default,
+                    AudioDevice::Default,
+                    MidiPort::Default,
+                )
+                .unwrap(),
         ))
     }
 
-    pub fn run_for(&mut self, duration: f64) -> PyResult<()> {
+    pub fn run_for(&mut self, duration: Sample) -> PyResult<()> {
         self.0
             .run_for(
-                Duration::from_secs_f64(duration),
-                Backend::Default,
-                Device::Default,
+                Duration::from_secs_f64(duration as f64),
+                AudioBackend::Default,
+                AudioDevice::Default,
+                MidiPort::Default,
             )
             .unwrap();
         Ok(())
     }
 
-    pub fn run_offline_to_file(&mut self, path: &str, duration: f64) -> PyResult<()> {
+    pub fn run_offline_to_file(&mut self, path: &str, duration: Sample) -> PyResult<()> {
         self.0
-            .run_offline_to_file(path, Duration::from_secs_f64(duration), 48_000.0, 512)
+            .run_offline_to_file(
+                path,
+                Duration::from_secs_f64(duration as f64),
+                48_000.0,
+                512,
+            )
             .unwrap();
         Ok(())
     }

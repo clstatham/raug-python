@@ -6,7 +6,7 @@ use raug::prelude::*;
 
 use crate::{
     graph::PyGraph,
-    message::PyMessageExt,
+    message::PySignal,
     node_builder::{PyNode, PyParam},
     runtime::PyRuntime,
 };
@@ -59,7 +59,7 @@ impl PyGraphBuilder {
     }
 
     pub fn print(&self) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.print(None, None)))
+        Ok(PyNode(self.0.add(Print::new(SignalType::Float))))
     }
 
     pub fn sample_rate(&self) -> PyResult<PyNode> {
@@ -71,28 +71,28 @@ impl PyGraphBuilder {
     }
 
     #[pyo3(signature = (frequency=440.0))]
-    pub fn sine_osc(&self, frequency: Sample) -> PyResult<PyNode> {
+    pub fn sine_osc(&self, frequency: Float) -> PyResult<PyNode> {
         Ok(PyNode(self.0.add(SineOscillator::new(frequency))))
     }
 
     #[pyo3(signature = (frequency=440.0))]
-    pub fn saw_osc(&self, frequency: Sample) -> PyResult<PyNode> {
+    pub fn saw_osc(&self, frequency: Float) -> PyResult<PyNode> {
         Ok(PyNode(self.0.add(SawOscillator::new(frequency))))
     }
 
     #[pyo3(signature = (frequency=440.0))]
-    pub fn bl_saw_osc(&self, frequency: Sample) -> PyResult<PyNode> {
+    pub fn bl_saw_osc(&self, frequency: Float) -> PyResult<PyNode> {
         Ok(PyNode(self.0.add(BlSawOscillator::new(frequency))))
     }
 
     #[pyo3(signature = (frequency=440.0, pulse_width=0.5))]
-    pub fn bl_square_osc(&self, frequency: Sample, pulse_width: Sample) -> PyResult<PyNode> {
+    pub fn bl_square_osc(&self, frequency: Float, pulse_width: Float) -> PyResult<PyNode> {
         Ok(PyNode(
             self.0.add(BlSquareOscillator::new(frequency, pulse_width)),
         ))
     }
 
-    pub fn constant(&self, value: Sample) -> PyResult<PyNode> {
+    pub fn constant(&self, value: Float) -> PyResult<PyNode> {
         Ok(PyNode(self.0.constant(value)))
     }
 
@@ -107,7 +107,7 @@ impl PyGraphBuilder {
         Ok(PyNode(self.0.add(buffer)))
     }
 
-    pub fn buffer(&self, contents: Vec<Sample>) -> PyResult<PyNode> {
+    pub fn buffer(&self, contents: Vec<Float>) -> PyResult<PyNode> {
         let samples: Vec<_> = contents.into_iter().collect();
         let buffer = Buffer::from_slice(&samples);
         let buffer = AudioBuffer::new(buffer);
@@ -115,32 +115,13 @@ impl PyGraphBuilder {
     }
 
     pub fn message(&self, message: Bound<PyAny>) -> PyResult<PyNode> {
-        let message = Message::try_from_pyany(message)?;
-        Ok(PyNode(self.0.message(message)))
-    }
-
-    pub fn constant_message(&self, message: Bound<PyAny>) -> PyResult<PyNode> {
-        let message = Message::try_from_pyany(message)?;
-        Ok(PyNode(self.0.constant_message(message)))
-    }
-
-    pub fn register(&self) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.add(Register::default())))
+        let message = PySignal::new(message)?;
+        Ok(PyNode(self.0.add(Message::new_any(message.into_inner()))))
     }
 
     #[pyo3(signature = (period=1.0))]
-    pub fn metro(&self, period: Sample) -> PyResult<PyNode> {
+    pub fn metro(&self, period: Float) -> PyResult<PyNode> {
         Ok(PyNode(self.0.add(Metro::new(period))))
-    }
-
-    #[pyo3(signature = (num_outputs=2))]
-    pub fn select(&self, num_outputs: usize) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.add(Select::new(num_outputs))))
-    }
-
-    #[pyo3(signature = (num_inputs=2))]
-    pub fn merge(&self, num_inputs: usize) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.add(Merge::new(num_inputs))))
     }
 
     pub fn counter(&self) -> PyResult<PyNode> {
@@ -148,7 +129,7 @@ impl PyGraphBuilder {
     }
 
     pub fn noise_osc(&self) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.add(NoiseOscillator::default())))
+        Ok(PyNode(self.0.add(NoiseOscillator)))
     }
 
     pub fn sample_and_hold(&self) -> PyResult<PyNode> {
@@ -167,9 +148,9 @@ impl PyGraphBuilder {
     #[pyo3(signature = (threshold=1.0, attack=0.01, release=0.1))]
     pub fn peak_limiter(
         &self,
-        threshold: Sample,
-        attack: Sample,
-        release: Sample,
+        threshold: Float,
+        attack: Float,
+        release: Float,
     ) -> PyResult<PyNode> {
         let mut processor = PeakLimiter::default();
         processor.threshold = threshold;
@@ -179,42 +160,42 @@ impl PyGraphBuilder {
     }
 
     #[pyo3(signature = (cutoff=1000.0, resonance=0.1))]
-    pub fn moog_ladder(&self, cutoff: Sample, resonance: Sample) -> PyResult<PyNode> {
+    pub fn moog_ladder(&self, cutoff: Float, resonance: Float) -> PyResult<PyNode> {
         Ok(PyNode(self.0.add(MoogLadder::new(cutoff, resonance))))
     }
 
     #[pyo3(signature = (cutoff=1000.0, q=0.1))]
-    pub fn biquad_lowpass(&self, cutoff: Sample, q: Sample) -> PyResult<PyNode> {
+    pub fn biquad_lowpass(&self, cutoff: Float, q: Float) -> PyResult<PyNode> {
         Ok(PyNode(self.0.add(AutoBiquad::lowpass(cutoff, q))))
     }
 
     #[pyo3(signature = (cutoff=1000.0, q=0.1))]
-    pub fn biquad_highpass(&self, cutoff: Sample, q: Sample) -> PyResult<PyNode> {
+    pub fn biquad_highpass(&self, cutoff: Float, q: Float) -> PyResult<PyNode> {
         Ok(PyNode(self.0.add(AutoBiquad::highpass(cutoff, q))))
     }
 
     #[pyo3(signature = (cutoff=1000.0, q=0.1))]
-    pub fn biquad_bandpass(&self, cutoff: Sample, q: Sample) -> PyResult<PyNode> {
+    pub fn biquad_bandpass(&self, cutoff: Float, q: Float) -> PyResult<PyNode> {
         Ok(PyNode(self.0.add(AutoBiquad::bandpass(cutoff, q))))
     }
 
     #[pyo3(signature = (cutoff=1000.0, q=0.1))]
-    pub fn biquad_notch(&self, cutoff: Sample, q: Sample) -> PyResult<PyNode> {
+    pub fn biquad_notch(&self, cutoff: Float, q: Float) -> PyResult<PyNode> {
         Ok(PyNode(self.0.add(AutoBiquad::notch(cutoff, q))))
     }
 
     #[pyo3(signature = (cutoff=1000.0, q=0.1, gain=0.0))]
-    pub fn biquad_peak(&self, cutoff: Sample, q: Sample, gain: Sample) -> PyResult<PyNode> {
+    pub fn biquad_peak(&self, cutoff: Float, q: Float, gain: Float) -> PyResult<PyNode> {
         Ok(PyNode(self.0.add(AutoBiquad::peak(cutoff, q, gain))))
     }
 
     #[pyo3(signature = (cutoff=1000.0, q=0.1, gain=0.0))]
-    pub fn biquad_lowshelf(&self, cutoff: Sample, q: Sample, gain: Sample) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.add(AutoBiquad::lowshelf(cutoff, q, gain))))
+    pub fn biquad_lowshelf(&self, cutoff: Float, q: Float, gain: Float) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(AutoBiquad::low_shelf(cutoff, q, gain))))
     }
 
     #[pyo3(signature = (cutoff=1000.0, q=0.1, gain=0.0))]
-    pub fn biquad_highshelf(&self, cutoff: Sample, q: Sample, gain: Sample) -> PyResult<PyNode> {
-        Ok(PyNode(self.0.add(AutoBiquad::highshelf(cutoff, q, gain))))
+    pub fn biquad_highshelf(&self, cutoff: Float, q: Float, gain: Float) -> PyResult<PyNode> {
+        Ok(PyNode(self.0.add(AutoBiquad::high_shelf(cutoff, q, gain))))
     }
 }

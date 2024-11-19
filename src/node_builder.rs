@@ -1,7 +1,7 @@
 use pyo3::prelude::*;
 use raug::prelude::*;
 
-use crate::message::PyMessageExt;
+use crate::message::PySignal;
 
 #[derive(Clone)]
 #[pyclass(name = "Node")]
@@ -42,7 +42,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone() + other.0.clone()))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() + other.0.clone()))
-        } else if let Ok(other) = other.extract::<Sample>() {
+        } else if let Ok(other) = other.extract::<Float>() {
             Ok(PyNode(self.0.clone() + other))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -56,7 +56,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone() - other.0.clone()))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() - other.0.clone()))
-        } else if let Ok(other) = other.extract::<Sample>() {
+        } else if let Ok(other) = other.extract::<Float>() {
             Ok(PyNode(self.0.clone() - other))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -70,7 +70,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone() * other.0.clone()))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() * other.0.clone()))
-        } else if let Ok(other) = other.extract::<Sample>() {
+        } else if let Ok(other) = other.extract::<Float>() {
             Ok(PyNode(self.0.clone() * other))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -84,7 +84,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone() / other.0.clone()))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() * other.0.clone()))
-        } else if let Ok(other) = other.extract::<Sample>() {
+        } else if let Ok(other) = other.extract::<Float>() {
             Ok(PyNode(self.0.clone() / other))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -98,7 +98,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone().powf(other.0.clone())))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() * other.0.clone()))
-        } else if let Ok(other) = other.extract::<Sample>() {
+        } else if let Ok(other) = other.extract::<Float>() {
             Ok(PyNode(self.0.clone().powf(other)))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -112,7 +112,7 @@ impl PyNode {
             Ok(PyNode(self.0.clone() % other.0.clone()))
         } else if let Ok(other) = other.extract::<PyParam>() {
             Ok(PyNode(self.0.clone() % other.0.clone()))
-        } else if let Ok(other) = other.extract::<Sample>() {
+        } else if let Ok(other) = other.extract::<Float>() {
             Ok(PyNode(self.0.clone() % other))
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -176,14 +176,24 @@ pub struct PyInput(pub(crate) Input);
 #[pymethods]
 impl PyInput {
     pub fn set(&self, value: Bound<PyAny>) -> PyResult<()> {
-        let message = Message::try_from_pyany(value)?;
-        self.0.set(message);
+        let message = PySignal::new(value)?;
+        self.0.connect(message.into_inner());
         Ok(())
     }
 
     pub fn param(&self, name: String, initial_value: Bound<PyAny>) -> PyResult<PyParam> {
-        let initial_value = Message::try_from_pyany(initial_value)?;
-        Ok(PyParam(self.0.param(name, Some(initial_value))))
+        let initial_value = PySignal::new(initial_value)?;
+        let initial_value = initial_value.into_inner();
+
+        match initial_value {
+            AnySignal::Float(f) => Ok(PyParam(self.0.param::<Float>(name, f))),
+            AnySignal::Int(i) => Ok(PyParam(self.0.param::<i64>(name, i))),
+            AnySignal::Bool(b) => Ok(PyParam(self.0.param::<bool>(name, b))),
+            AnySignal::String(s) => Ok(PyParam(self.0.param::<String>(name, s))),
+            _ => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "Invalid type",
+            )),
+        }
     }
 
     pub fn connect(&self, node: Bound<PyOutput>) -> PyResult<()> {
@@ -224,20 +234,29 @@ impl PyParam {
     #[new]
     #[allow(clippy::new_without_default)]
     pub fn new(name: String, initial_value: Bound<PyAny>) -> PyResult<Self> {
-        let initial_value = Message::try_from_pyany(initial_value)?;
-        Ok(Self(Param::new(name, Some(initial_value))))
+        let initial_value = PySignal::new(initial_value)?.into_inner();
+
+        match initial_value {
+            AnySignal::Float(f) => Ok(PyParam(Param::new::<Float>(&name, f))),
+            AnySignal::Int(i) => Ok(PyParam(Param::new::<i64>(&name, i))),
+            AnySignal::Bool(b) => Ok(PyParam(Param::new::<bool>(&name, b))),
+            AnySignal::String(s) => Ok(PyParam(Param::new::<String>(&name, s))),
+            _ => Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                "Invalid type",
+            )),
+        }
     }
 
-    pub fn set(&self, value: Bound<PyAny>) -> PyResult<()> {
-        let message = Message::try_from_pyany(value)?;
-        self.0.set(message);
+    pub fn send(&self, value: Bound<PyAny>) -> PyResult<()> {
+        let message = PySignal::new(value)?.into_inner();
+        self.0.tx().send(message);
         Ok(())
     }
 
     pub fn get(&mut self, py: Python) -> PyResult<PyObject> {
-        let message = self.0.get();
+        let message = self.0.recv();
         if let Some(message) = message {
-            message.try_to_pyobject(py)
+            PySignal(message).try_to_pyobject(py)
         } else {
             Ok(py.None())
         }
